@@ -28,7 +28,7 @@ func main() {
 	router.Handle("/subscriptions", handlers.UnsubscribeHandler).Methods("DELETE")
 
 	originsOk := gorrilaHandlers.AllowedOrigins([]string{"https://example.com"})
-	methodsOk := gorrilaHandlers.AllowedMethods([]string{"GET", "POST", "OPTIONS"})
+	methodsOk := gorrilaHandlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "DELETE"})
 
 	// Server has long write timeout because we're supporting a streaming response.
 	srv := http.Server{
