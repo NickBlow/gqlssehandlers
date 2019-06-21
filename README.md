@@ -5,6 +5,12 @@ The aim of this package is to create a customisable set of handlers able to hand
 Benefits over WebSockets are the simplicity of implementing - on the server it only requires setting a few headers and sending a streaming response, and on the client implementing an [Event Source](https://developer.mozilla.org/en-US/docs/Web/API/EventSource) is only a few lines of code. The other major benefit is the ability to stream over HTTP/2, which is not yet implemented for Web-Sockets, though it recently got a [proposed standard](https://tools.ietf.org/html/rfc8441).
 
 
+# How to use
+
+TBD
+
 # Further work
 
 A definite value add would be the ability to create an [ApolloLink](https://github.com/apollographql/apollo-link), to let this be pluggable for people using Apollo Client.
+
+Feedback from actual use to help improve DX, as well as examples for authentication etc.
