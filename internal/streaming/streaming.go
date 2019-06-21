@@ -44,10 +44,10 @@ Loop:
 			s.Broker.ClosedClients <- clientID
 			break Loop
 		case <-time.After(time.Second * 3):
-			fmt.Fprint(w, ":KEEPALIVE \n")
+			fmt.Fprint(w, ":KEEPALIVE \n\n")
 			flusher.Flush()
 		case val := <-messageChan:
-			fmt.Fprintf(w, "data:%v \n", val)
+			fmt.Fprintf(w, "data:%v \n\n", val)
 			flusher.Flush()
 		}
 	}
