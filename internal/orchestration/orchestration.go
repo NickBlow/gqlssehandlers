@@ -18,7 +18,7 @@ type ClientInfo struct {
 
 var subscriptionLookupTable = make(map[string]ClientInfo)
 
-// Broker contains all the details to manage state of connected clients. In order to start working, you must call StartListening
+// Broker contains all the details to manage state of connected clients.
 type Broker struct {
 	NewClients           chan ClientInfo
 	ClosedClients        chan string
