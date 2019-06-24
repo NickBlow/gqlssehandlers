@@ -1,6 +1,11 @@
 package orchestration
 
-import "github.com/graphql-go/graphql"
+import (
+	"encoding/json"
+	"log"
+
+	"github.com/graphql-go/graphql"
+)
 
 // SubscriptionData encompasses a particular subscription and the parameters for the GraphQL Query that should be performed.
 type SubscriptionData struct {
@@ -33,7 +38,6 @@ func InitializeBroker() *Broker {
 	b := &Broker{
 		NewClients:           make(chan ClientInfo),
 		ClosedClients:        make(chan string),
-		NewSubscriptions:     make(chan SubscriptionData),
 		executeSubscriptions: make(chan SubscriptionData),
 		bufferedEvents:       make([]interface{}, 0),
 		clients:              map[string]ClientInfo{},
@@ -62,9 +66,23 @@ func (b *Broker) listen() {
 		case client := <-b.ClosedClients:
 			delete(b.clients, client)
 		case event := <-b.executeSubscriptions:
-			for _, client := range b.clients {
-				client.CommunicationChannel <- event.ID
+			client := subscriptionLookupTable[event.ID]
+			result := graphql.Do(*event.GraphQLParams)
+			json, err := marshallGQLResult(result)
+			if err != nil {
+				log.Printf("failed to marshal message: %v", err)
+			} else {
+				client.CommunicationChannel <- json
 			}
 		}
 	}
+}
+
+func marshallGQLResult(result *graphql.Result) (string, error) {
+	message, err := json.Marshal(result)
+	if err != nil {
+		return "", err
+	}
+	return string(message), nil
+
 }

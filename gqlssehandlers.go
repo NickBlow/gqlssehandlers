@@ -18,7 +18,7 @@ type OTP struct {
 // and calls the callback with an array of interested clients whenever it receives an event.
 type SubscriptionAdapter interface {
 	StartListening(cb orchestration.NewEventCallback)
-	NotifyNewSubscription(subscriber orchestration.SubscriptionData) error
+	NotifyNewSubscription(subscriber *orchestration.SubscriptionData) error
 	NotifyUnsubscribe(subscriptionID string) error
 }
 
@@ -46,8 +46,8 @@ func GetHandlers(config *HandlerConfig) *Handlers {
 	config.Adapter.StartListening(subscriptionBroker.ExecuteQueriesAndPublish)
 
 	return &Handlers{
-		SubscribeHandler:     &subscriptions.SubscribeHandler{Broker: subscriptionBroker},
-		UnsubscribeHandler:   &subscriptions.UnsubscribeHandler{Broker: subscriptionBroker},
+		SubscribeHandler:     &subscriptions.SubscribeHandler{Broker: subscriptionBroker, StorageAdapter: config.Adapter},
+		UnsubscribeHandler:   &subscriptions.UnsubscribeHandler{Broker: subscriptionBroker, StorageAdapter: config.Adapter},
 		PublishStreamHandler: &streaming.Handler{Broker: subscriptionBroker},
 	}
 }
