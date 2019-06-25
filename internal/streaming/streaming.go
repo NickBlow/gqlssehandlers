@@ -9,9 +9,14 @@ import (
 	gonanoid "github.com/matoous/go-nanoid"
 )
 
+type authAdapter interface {
+	GetUserIDForToken(tokenID string) (string, error)
+}
+
 // Handler handles the endpoint for streaming and contains a reference to the SubscriptionBroker
 type Handler struct {
-	Broker *orchestration.Broker
+	Broker      *orchestration.Broker
+	AuthAdapter authAdapter
 }
 
 func (s *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +26,7 @@ func (s *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	closed := w.(http.CloseNotifier).CloseNotify()
-	clientID, err := gonanoid.Nanoid()
+	clientID, err := gonanoid.Nanoid() // TODO grab clientID from request
 	if err != nil {
 		fmt.Println("Couldn't generate client ID")
 		http.Error(w, "Error", http.StatusInternalServerError)

@@ -3,44 +3,55 @@ package orchestration
 import (
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/graphql-go/graphql"
 )
 
 // SubscriptionData encompasses a particular subscription and the parameters for the GraphQL Query that should be performed.
 type SubscriptionData struct {
-	ID            string
-	GraphQLParams *graphql.Params
+	SubscriptionID   string
+	UserID           string
+	StreamingContext string
+	GraphQLParams    *graphql.Params
 }
 
 // ClientInfo contains information about a connected client
 type ClientInfo struct {
 	ClientID             string
+	UserID               string
 	CommunicationChannel chan string
 	LastSeenEventID      string
-	subscriptions        []string
+	subscriptions        []SubscriptionData
 }
 
-var subscriptionLookupTable = make(map[string]ClientInfo)
+// disconnectedClient contains details about a disconnected client, these will be periodically removed
+type disconnectedClient struct {
+	ClientID       string
+	DisconnectedAt int64
+}
+
+var subscriptionLookupTable = make(map[string]*ClientInfo) // map from subscriptionID to clientInfo
 
 // Broker contains all the details to manage state of connected clients.
 type Broker struct {
-	NewClients           chan ClientInfo
-	ClosedClients        chan string
-	NewSubscriptions     chan SubscriptionData
-	executeSubscriptions chan SubscriptionData
-	bufferedEvents       []interface{}
-	clients              map[string]ClientInfo
+	NewClients                  chan ClientInfo
+	ClosedClients               chan string
+	executeSubscriptions        chan SubscriptionData
+	bufferedEvents              []interface{}
+	clients                     map[string]ClientInfo
+	recentlyDisconnectedClients map[string]disconnectedClient
 }
 
 // InitializeBroker creates a broker and starts listening to events
 func InitializeBroker() *Broker {
 	b := &Broker{
-		NewClients:           make(chan ClientInfo),
-		ClosedClients:        make(chan string),
-		executeSubscriptions: make(chan SubscriptionData),
-		bufferedEvents:       make([]interface{}, 0),
-		clients:              map[string]ClientInfo{},
+		NewClients:                  make(chan ClientInfo),
+		ClosedClients:               make(chan string),
+		executeSubscriptions:        make(chan SubscriptionData),
+		bufferedEvents:              make([]interface{}, 0),
+		clients:                     map[string]ClientInfo{},
+		recentlyDisconnectedClients: map[string]disconnectedClient{},
 	}
 	go b.listen()
 	return b
@@ -54,7 +65,6 @@ type NewEventCallback func(subscriptions []SubscriptionData)
 func (b *Broker) ExecuteQueriesAndPublish(subscriptions []SubscriptionData) {
 	for _, val := range subscriptions {
 		b.executeSubscriptions <- val
-
 	}
 }
 
@@ -64,9 +74,13 @@ func (b *Broker) listen() {
 		case client := <-b.NewClients:
 			b.clients[client.ClientID] = client
 		case client := <-b.ClosedClients:
+			b.recentlyDisconnectedClients[client] = disconnectedClient{
+				ClientID:       client,
+				DisconnectedAt: time.Now().Unix(),
+			}
 			delete(b.clients, client)
 		case event := <-b.executeSubscriptions:
-			client := subscriptionLookupTable[event.ID]
+			client := subscriptionLookupTable[event.SubscriptionID]
 			result := graphql.Do(*event.GraphQLParams)
 			json, err := marshallGQLResult(result)
 			if err != nil {
@@ -84,5 +98,4 @@ func marshallGQLResult(result *graphql.Result) (string, error) {
 		return "", err
 	}
 	return string(message), nil
-
 }

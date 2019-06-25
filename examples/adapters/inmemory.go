@@ -40,12 +40,12 @@ func (a *InMemoryAdapter) StartListening(cb orchestration.NewEventCallback) {
 
 // NotifyNewSubscription adds a subscriber to the map
 func (a *InMemoryAdapter) NotifyNewSubscription(subscriber subscriptionData) error {
-	subscribersMap[subscriber.ID] = subscriber
+	subscribersMap[subscriber.SubscriptionID] = subscriber
 	return nil
 }
 
 // NotifyUnsubscribe removes a subscriber from the map
-func (a *InMemoryAdapter) NotifyUnsubscribe(subscriber string) error {
+func (a *InMemoryAdapter) NotifyUnsubscribe(subscriber string, userID string) error {
 	delete(subscribersMap, subscriber)
 	return nil
 }

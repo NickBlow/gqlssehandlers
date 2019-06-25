@@ -25,10 +25,9 @@ func main() {
 	handlers := gqlssehandlers.GetHandlers(subscriptionServerConfig)
 	router.Handle("/", handlers.PublishStreamHandler).Methods("GET")
 	router.Handle("/subscriptions", handlers.SubscribeHandler).Methods("POST")
-	router.Handle("/subscriptions", handlers.UnsubscribeHandler).Methods("DELETE")
 
 	originsOk := gorrilaHandlers.AllowedOrigins([]string{"https://example.com"})
-	methodsOk := gorrilaHandlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "DELETE"})
+	methodsOk := gorrilaHandlers.AllowedMethods([]string{"GET", "POST", "OPTIONS"})
 
 	// Server has long write timeout because we're supporting a streaming response.
 	srv := http.Server{
