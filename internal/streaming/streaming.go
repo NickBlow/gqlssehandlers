@@ -10,14 +10,14 @@ import (
 	gonanoid "github.com/matoous/go-nanoid"
 )
 
-type authAdapter interface {
+type tokenAdapter interface {
 	GetUserIDForToken(ctx context.Context, tokenID string) (string, error)
 }
 
 // Handler handles the endpoint for streaming and contains a reference to the SubscriptionBroker
 type Handler struct {
-	Broker      *orchestration.Broker
-	AuthAdapter authAdapter
+	Broker       *orchestration.Broker
+	TokenAdapter tokenAdapter
 }
 
 func (s *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
