@@ -9,6 +9,7 @@ import (
 )
 
 type subscriptionData = orchestration.SubscriptionData
+type subcriptionWithContext = orchestration.SubscriptionWithContext
 
 var subscribersMap = make(map[string]subscriptionData)
 
@@ -33,21 +34,22 @@ func (a *InMemoryAdapter) StartListening(cb orchestration.NewEventCallback) {
 		for {
 			<-time.After(time.Second * 10)
 			for _, val := range subscribersMap {
-				cb([]subscriptionData{val})
+				valWithContext := subcriptionWithContext{SubscriptionData: val}
+				cb([]subcriptionWithContext{valWithContext})
 			}
 		}
 	}()
 }
 
 // NotifyNewSubscription adds a subscriber to the map
-func (a *InMemoryAdapter) NotifyNewSubscription(ctx context.Context, subscriberID string, subscriberData subscriptionData) error {
-	subscribersMap[subscriberID] = subscriberData
+func (a *InMemoryAdapter) NotifyNewSubscription(ctx context.Context, clientID string, subscriptionID string, subscriberData orchestration.SubscriptionData) error {
+	subscribersMap[subscriptionID] = subscriberData
 	return nil
 }
 
 // NotifyUnsubscribe removes a subscriber from the map
-func (a *InMemoryAdapter) NotifyUnsubscribe(ctx context.Context, subscriber string, userID string) error {
-	delete(subscribersMap, subscriber)
+func (a *InMemoryAdapter) NotifyUnsubscribe(ctx context.Context, clientID string, subscriptionID string) error {
+	delete(subscribersMap, subscriptionID)
 	return nil
 }
 

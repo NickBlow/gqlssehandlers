@@ -1,23 +1,17 @@
 package streaming
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/NickBlow/gqlssehandlers/internal/clientid"
 	"github.com/NickBlow/gqlssehandlers/internal/orchestration"
-	gonanoid "github.com/matoous/go-nanoid"
 )
-
-type tokenAdapter interface {
-	GetUserIDForToken(ctx context.Context, tokenID string) (string, error)
-}
 
 // Handler handles the endpoint for streaming and contains a reference to the SubscriptionBroker
 type Handler struct {
-	Broker       *orchestration.Broker
-	TokenAdapter tokenAdapter
+	Broker *orchestration.Broker
 }
 
 func (s *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -27,17 +21,11 @@ func (s *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	closed := w.(http.CloseNotifier).CloseNotify()
-	clientID, err := gonanoid.Nanoid() // TODO grab clientID from request
-	if err != nil {
-		fmt.Println("Couldn't generate client ID")
-		http.Error(w, "Error", http.StatusInternalServerError)
-		return
-	}
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	messageChan := make(chan string)
-
+	clientID := clientid.GetClientIDFromRequest(r)
 	s.Broker.NewClients <- orchestration.ClientInfo{
 		ClientID:             clientID,
 		CommunicationChannel: messageChan,
