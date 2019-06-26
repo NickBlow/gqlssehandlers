@@ -1,6 +1,7 @@
 package streaming
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -10,7 +11,7 @@ import (
 )
 
 type authAdapter interface {
-	GetUserIDForToken(tokenID string) (string, error)
+	GetUserIDForToken(ctx context.Context, tokenID string) (string, error)
 }
 
 // Handler handles the endpoint for streaming and contains a reference to the SubscriptionBroker

@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"context"
 	"time"
 
 	"github.com/NickBlow/gqlssehandlers/internal/orchestration"
@@ -39,13 +40,18 @@ func (a *InMemoryAdapter) StartListening(cb orchestration.NewEventCallback) {
 }
 
 // NotifyNewSubscription adds a subscriber to the map
-func (a *InMemoryAdapter) NotifyNewSubscription(subscriber subscriptionData) error {
-	subscribersMap[subscriber.SubscriptionID] = subscriber
+func (a *InMemoryAdapter) NotifyNewSubscription(ctx context.Context, subscriberID string, subscriberData subscriptionData) error {
+	subscribersMap[subscriberID] = subscriberData
 	return nil
 }
 
 // NotifyUnsubscribe removes a subscriber from the map
-func (a *InMemoryAdapter) NotifyUnsubscribe(subscriber string, userID string) error {
+func (a *InMemoryAdapter) NotifyUnsubscribe(ctx context.Context, subscriber string, userID string) error {
 	delete(subscribersMap, subscriber)
 	return nil
+}
+
+// GetSubscriptionData returns data on a subscription by ID
+func (a *InMemoryAdapter) GetSubscriptionData(subscriptionID string) (orchestration.SubscriptionData, error) {
+	return subscribersMap[subscriptionID], nil
 }

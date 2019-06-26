@@ -1,12 +1,12 @@
 package subscriptions
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
-	"github.com/NickBlow/gqlssehandlers/auth"
 	"github.com/NickBlow/gqlssehandlers/internal/orchestration"
 	"github.com/graphql-go/graphql"
 )
@@ -22,19 +22,19 @@ import (
 // GQL_COMPLETE and GQL_DATA will be sent over the streaming endpoint
 
 type subscriptionStorageAdapter interface {
-	NotifyNewSubscription(subscriber orchestration.SubscriptionData) error
-	NotifyUnsubscribe(subscriptionID string, userID string) error
+	NotifyNewSubscription(ctx context.Context, subscriptionID string, subscriberData orchestration.SubscriptionData) error
+	NotifyUnsubscribe(ctx context.Context, subscriptionID string, userID string) error
 }
 
-type authAdapter interface {
-	GetUserIDFromRequest(req *http.Request) (string, *auth.FailedResponse)
+type tokenAdapter interface {
+	StoreStreamingToken(ctx context.Context, token string, clientID string) error
 }
 
 // SubscribeHandler handles the endpoint for processing new subscriptions and contains a reference to the Broker
 type SubscribeHandler struct {
 	Broker         *orchestration.Broker
 	StorageAdapter subscriptionStorageAdapter
-	AuthAdapter    authAdapter
+	TokenAdapter   tokenAdapter
 }
 
 type gqlOverWebsocketProtocol struct {
@@ -72,11 +72,7 @@ func decodeGQLQuery(r *http.Request, streamingContext string, operationID string
 }
 
 func (s *SubscribeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	userID, failedResponse := s.AuthAdapter.GetUserIDFromRequest(r)
-	if failedResponse != nil {
-		failedResponse.DoWrite(w)
-		return
-	}
+	userID := "123"
 	req, err := decodeGQLQuery(r, userID, "foo")
 	req.UserID = userID
 	if err != nil {
@@ -85,6 +81,6 @@ func (s *SubscribeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"message":"Something went wrong"}`))
 		return
 	}
-	s.StorageAdapter.NotifyNewSubscription(*req)
+	s.StorageAdapter.NotifyNewSubscription(r.Context(), req.SubscriptionID, *req)
 	fmt.Fprint(w, `{"message":"OK"}`)
 }

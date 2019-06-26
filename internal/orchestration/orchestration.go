@@ -10,19 +10,16 @@ import (
 
 // SubscriptionData encompasses a particular subscription and the parameters for the GraphQL Query that should be performed.
 type SubscriptionData struct {
-	SubscriptionID   string
-	UserID           string
-	StreamingContext string
-	GraphQLParams    *graphql.Params
+	SubscriptionID string
+	ClientID       string
+	GraphQLParams  *graphql.Params
 }
 
 // ClientInfo contains information about a connected client
 type ClientInfo struct {
 	ClientID             string
-	UserID               string
 	CommunicationChannel chan string
 	LastSeenEventID      string
-	subscriptions        []SubscriptionData
 }
 
 // disconnectedClient contains details about a disconnected client, these will be periodically removed
@@ -30,8 +27,6 @@ type disconnectedClient struct {
 	ClientID       string
 	DisconnectedAt int64
 }
-
-var subscriptionLookupTable = make(map[string]*ClientInfo) // map from subscriptionID to clientInfo
 
 // Broker contains all the details to manage state of connected clients.
 type Broker struct {
@@ -80,13 +75,14 @@ func (b *Broker) listen() {
 			}
 			delete(b.clients, client)
 		case event := <-b.executeSubscriptions:
-			client := subscriptionLookupTable[event.SubscriptionID]
-			result := graphql.Do(*event.GraphQLParams)
-			json, err := marshallGQLResult(result)
-			if err != nil {
-				log.Printf("failed to marshal message: %v", err)
-			} else {
-				client.CommunicationChannel <- json
+			if client, ok := b.clients[event.ClientID]; ok {
+				result := graphql.Do(*event.GraphQLParams)
+				json, err := marshallGQLResult(result)
+				if err != nil {
+					log.Printf("failed to marshal message: %v", err)
+				} else {
+					client.CommunicationChannel <- json
+				}
 			}
 		}
 	}
