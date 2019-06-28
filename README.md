@@ -13,4 +13,10 @@ TBD
 
 A definite value add would be the ability to create an [ApolloLink](https://github.com/apollographql/apollo-link), to let this be pluggable for people using Apollo Client.
 
+EventBuffer implementation -
+If the EventBuffer size has been set, the server will store events in memory,
+and re-send them if a client reconnects with a Last-Event-ID Header. This may result in duplicate messages being sent, so ensure your client is idempotent.
+This will also only send events that the server itself received.
+If you want to ensure a client always gets buffered messages, you can either use sticky sessions, route based on some hash, or multicast events to all servers.
+
 Feedback from actual use to help improve DX, as well as examples for authentication etc.

@@ -1,14 +1,17 @@
 // Package gqlssehandlers is a GraphQL Subscriptions over Server Sent Events library for Go.
+// It will create two handler endpoints that react to a subset of messages from the graphql-over-websocket protocol
+// (see subscriptions package)
 package gqlssehandlers
 
 import (
 	"context"
 	"net/http"
 
-	"github.com/NickBlow/gqlssehandlers/internal/clientid"
+	"github.com/NickBlow/gqlssehandlers/clientid"
 	"github.com/NickBlow/gqlssehandlers/internal/orchestration"
 	"github.com/NickBlow/gqlssehandlers/internal/streaming"
-	"github.com/NickBlow/gqlssehandlers/internal/subscriptions"
+	"github.com/NickBlow/gqlssehandlers/internal/subscriptionhandlers"
+	"github.com/NickBlow/gqlssehandlers/subscriptions"
 	"github.com/graphql-go/graphql"
 )
 
@@ -20,7 +23,7 @@ import (
 // The combination of clientID and subscriptionID is unique
 type SubscriptionAdapter interface {
 	StartListening(cb orchestration.NewEventCallback)
-	NotifyNewSubscription(ctx context.Context, clientID string, subscriptionID string, subscriberData orchestration.SubscriptionData) error
+	NotifyNewSubscription(ctx context.Context, clientID string, subscriptionID string, subscriberData subscriptions.Data) error
 	NotifyUnsubscribe(ctx context.Context, clientID string, subscriptionID string) error
 }
 
@@ -32,33 +35,22 @@ type Handlers struct {
 
 // HandlerConfig represesents the configuration options for GQLSSEHandlers
 // You should pass in your graphql Schema here
-// If the EventBuffer size has been set, the server will store events in memory,
-// and re-send them if a client reconnects with a Last-Event-ID Header. This may result in duplicate messages being sent,
-// so ensure your client is idempotent.
-// This will also only send events that the server itself received.
-// If you want to ensure a client always gets buffered messages, you can either use sticky sessions,
-// route based on some hash, or multicast events to all servers.
 type HandlerConfig struct {
-	Adapter         SubscriptionAdapter
-	Schema          *graphql.Schema
-	EventBufferSize int64
+	Adapter SubscriptionAdapter
+	Schema  *graphql.Schema
 }
-
-// ClientIDKey is the key for a value on the request context it will pick it up and use instead of the default cookie
-// The value should be a string representing the client id.
-// Malformed (non-string) values will automatically fall back to the cookie
-const ClientIDKey = clientid.ClientIDKey
 
 // GetHandlers returns all the handlers required to set up the GraphQL subscription.
 // The handlers have a concept of client ID, and will by default set a cookie with a client id and use that.
 // This default is not safe across multiple browser windows/tabs,
 // and while the id uses a strong random number generator, it is not signed.
 // You can write middleware to set the ClientIDKey in the context to overwrite this default behaviour
+// See the clientid package for more information.
 func GetHandlers(config *HandlerConfig) *Handlers {
 	subscriptionBroker := orchestration.InitializeBroker(config.Schema)
-	config.Adapter.StartListening(subscriptionBroker.ExecuteQueriesAndPublish)
+	config.Adapter.StartListening(subscriptionBroker.PushDataToClient)
 
-	subscribeHandler := &subscriptions.SubscribeHandler{
+	subscribeHandler := &subscriptionhandlers.Handler{
 		Broker:         subscriptionBroker,
 		StorageAdapter: config.Adapter,
 	}

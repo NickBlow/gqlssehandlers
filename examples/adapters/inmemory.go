@@ -2,58 +2,46 @@ package adapters
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/NickBlow/gqlssehandlers/internal/orchestration"
-	"github.com/graphql-go/graphql"
+	"github.com/NickBlow/gqlssehandlers/subscriptions"
 )
 
-type subscriptionData = orchestration.SubscriptionData
-type subcriptionWithContext = orchestration.SubscriptionWithContext
+type subscriptionData = subscriptions.Data
 
 var subscribersMap = make(map[string]subscriptionData)
 
 // InMemoryAdapter stores subscribers in memory, and triggers events at random intervals
 type InMemoryAdapter struct{}
 
-var fields = graphql.Fields{
-	"hello": &graphql.Field{
-		Type: graphql.String,
-		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-			return "world", nil
-		},
-	},
-}
-var rootQuery = graphql.ObjectConfig{Name: "RootQuery", Fields: fields}
-var schemaConfig = graphql.SchemaConfig{Query: graphql.NewObject(rootQuery)}
-var schema, err = graphql.NewSchema(schemaConfig)
-
 //StartListening calls the callback at random intervals
 func (a *InMemoryAdapter) StartListening(cb orchestration.NewEventCallback) {
 	go func() {
 		for {
-			<-time.After(time.Second * 10)
+			<-time.After(time.Second * 1)
 			for _, val := range subscribersMap {
-				valWithContext := subcriptionWithContext{SubscriptionData: val}
-				cb([]subcriptionWithContext{valWithContext})
+				cb(subscriptions.WrappedEvent{
+					SubscriptionID: val.SubscriptionID,
+					ClientID:       val.ClientID,
+					QueryResult:    `{"hello": "world"}`,
+				})
 			}
 		}
 	}()
 }
 
 // NotifyNewSubscription adds a subscriber to the map
-func (a *InMemoryAdapter) NotifyNewSubscription(ctx context.Context, clientID string, subscriptionID string, subscriberData orchestration.SubscriptionData) error {
-	subscribersMap[subscriptionID] = subscriberData
+func (a *InMemoryAdapter) NotifyNewSubscription(ctx context.Context, clientID string, subscriptionID string, subscriberData subscriptionData) error {
+	compoundKey := fmt.Sprintf("%v_%v", clientID, subscriptionID)
+	subscribersMap[compoundKey] = subscriberData
 	return nil
 }
 
 // NotifyUnsubscribe removes a subscriber from the map
 func (a *InMemoryAdapter) NotifyUnsubscribe(ctx context.Context, clientID string, subscriptionID string) error {
-	delete(subscribersMap, subscriptionID)
+	compoundKey := fmt.Sprintf("%v_%v", clientID, subscriptionID)
+	delete(subscribersMap, compoundKey)
 	return nil
-}
-
-// GetSubscriptionData returns data on a subscription by ID
-func (a *InMemoryAdapter) GetSubscriptionData(subscriptionID string) (orchestration.SubscriptionData, error) {
-	return subscribersMap[subscriptionID], nil
 }
