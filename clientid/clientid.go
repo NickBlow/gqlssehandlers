@@ -47,11 +47,11 @@ func GetClientIDFromRequest(r *http.Request) string {
 }
 
 func getClientIDFromDefaults(r *http.Request) string {
-	if headerArray, ok := r.Header[ClientIDHeader]; ok && len(headerArray) > 1 {
-		return headerArray[0]
-	}
 	if qs := r.URL.Query().Get(ClientIDQueryString); qs != "" {
 		return qs
+	}
+	if headerArray, ok := r.Header[ClientIDHeader]; ok && len(headerArray) > 1 {
+		return headerArray[0]
 	}
 	cookie, err := r.Cookie(DefaultCookieName)
 	if err != nil {
