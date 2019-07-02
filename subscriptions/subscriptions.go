@@ -13,7 +13,7 @@ type Data struct {
 }
 
 // WrappedEvent contains the information needed to be sent to clients
-// The event should be the results of the graphql query, and finished should be a boolean
+// The QueryResult should be the results of the graphql query, and finished should be a boolean
 // detailing whether more events of this type should be expected
 type WrappedEvent struct {
 	SubscriptionID string
