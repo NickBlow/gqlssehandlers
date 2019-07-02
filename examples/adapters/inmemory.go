@@ -14,6 +14,7 @@ type subscriptionData = subscriptions.Data
 
 var subscribersMap = make(map[string]subscriptionData)
 
+// Schema is the example schema
 var Schema graphql.Schema
 
 func init() {
@@ -42,7 +43,7 @@ type InMemoryAdapter struct{}
 func (a *InMemoryAdapter) StartListening(cb orchestration.NewEventCallback) {
 	go func() {
 		for {
-			<-time.After(time.Second * 1)
+			<-time.After(time.Second * 16)
 			for _, val := range subscribersMap {
 				cb(subscriptions.WrappedEvent{
 					SubscriptionID: val.SubscriptionID,

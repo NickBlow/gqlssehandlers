@@ -44,7 +44,6 @@ Loop:
 			s.Broker.ClosedClients <- clientID
 			break Loop
 		case <-time.After(time.Second * 15):
-			fmt.Printf("Keepalive for client %s", clientID)
 			fmt.Fprintf(w, "data:%v \n\n", protocol.KeepAlivePayload)
 			flusher.Flush()
 		case data := <-messageChan:
