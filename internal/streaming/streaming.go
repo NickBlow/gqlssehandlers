@@ -1,7 +1,6 @@
 package streaming
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -27,7 +26,7 @@ func (s *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
-	messageChan := make(chan interface{})
+	messageChan := make(chan []byte)
 	clientID := clientid.GetClientIDFromRequest(r)
 	s.Broker.NewClients <- orchestration.ClientInfo{
 		ClientID:             clientID,
@@ -45,15 +44,11 @@ Loop:
 			s.Broker.ClosedClients <- clientID
 			break Loop
 		case <-time.After(time.Second * 15):
+			fmt.Printf("Keepalive for client %s", clientID)
 			fmt.Fprintf(w, "data:%v \n\n", protocol.KeepAlivePayload)
 			flusher.Flush()
-		case val := <-messageChan:
-			data, err := json.Marshal(val)
-			if err != nil {
-				fmt.Printf("Error while marshalling message")
-				fmt.Println(err)
-			}
-			fmt.Fprintf(w, "data:%v \n\n", data)
+		case data := <-messageChan:
+			fmt.Fprintf(w, "data:%v \n\n", string(data))
 			flusher.Flush()
 		}
 	}

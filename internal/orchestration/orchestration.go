@@ -13,7 +13,7 @@ import (
 // ClientInfo contains information about a connected client
 type ClientInfo struct {
 	ClientID             string
-	CommunicationChannel chan interface{}
+	CommunicationChannel chan []byte
 	LastSeenEventID      string
 	CloseChannel         chan bool
 }
@@ -58,6 +58,7 @@ func (b *Broker) listen() {
 	for {
 		select {
 		case client := <-b.NewClients:
+			fmt.Println("NEW CLIENT", client)
 			b.clients[client.ClientID] = client
 		case client := <-b.ClosingClients:
 			b.clients[client].CloseChannel <- true
@@ -65,6 +66,9 @@ func (b *Broker) listen() {
 			delete(b.clients, client)
 		case event := <-b.newEvents:
 			client := b.clients[event.ClientID]
+			if client.CommunicationChannel == nil {
+				break
+			}
 			resultType := protocol.GQLData
 			if event.Finished {
 				resultType = protocol.GQLComplete

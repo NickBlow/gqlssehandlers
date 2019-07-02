@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/NickBlow/gqlssehandlers"
 	"github.com/NickBlow/gqlssehandlers/examples/adapters"
-	"github.com/graphql-go/graphql"
 
 	gorrilaHandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -19,25 +17,9 @@ func main() {
 	router := mux.NewRouter()
 	eventStream := &adapters.InMemoryAdapter{}
 
-	var fields = graphql.Fields{
-		"hello": &graphql.Field{
-			Type: graphql.String,
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				return "world", nil
-			},
-		},
-	}
-	var rootQuery = graphql.ObjectConfig{Name: "RootQuery", Fields: fields}
-	var schemaConfig = graphql.SchemaConfig{Query: graphql.NewObject(rootQuery)}
-	var schema, err = graphql.NewSchema(schemaConfig)
-	if err != nil {
-		fmt.Println(err)
-		panic("Couldn't create schema")
-	}
-
 	subscriptionServerConfig := &gqlssehandlers.HandlerConfig{
 		Adapter: eventStream,
-		Schema:  &schema,
+		Schema:  &adapters.Schema,
 	}
 
 	handlers := gqlssehandlers.GetHandlers(subscriptionServerConfig)
