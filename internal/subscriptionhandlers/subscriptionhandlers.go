@@ -83,6 +83,7 @@ func (s *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for k, v := range res.ExtraHeaders {
 		w.Header().Set(k, v)
 	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(res.StatusCode)
 	w.Write(res.Message)
 }

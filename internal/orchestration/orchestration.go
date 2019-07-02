@@ -58,7 +58,6 @@ func (b *Broker) listen() {
 	for {
 		select {
 		case client := <-b.NewClients:
-			fmt.Println("NEW CLIENT", client)
 			b.clients[client.ClientID] = client
 		case client := <-b.ClosingClients:
 			b.clients[client].CloseChannel <- true
