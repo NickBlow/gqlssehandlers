@@ -3,6 +3,7 @@ package adapters
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/NickBlow/gqlssehandlers/internal/orchestration"
@@ -43,12 +44,18 @@ type InMemoryAdapter struct{}
 func (a *InMemoryAdapter) StartListening(cb orchestration.NewEventCallback) {
 	go func() {
 		for {
-			<-time.After(time.Second * 16)
+			<-time.After(time.Second * time.Duration(rand.Intn(10)))
 			for _, val := range subscribersMap {
 				cb(subscriptions.WrappedEvent{
 					SubscriptionID: val.SubscriptionID,
 					ClientID:       val.ClientID,
-					QueryResult:    graphql.Do(graphql.Params{Schema: Schema, RequestString: val.RequestString, VariableValues: val.VariableValues}),
+					QueryResult: graphql.Do(
+						graphql.Params{
+							Schema:         Schema,
+							RequestString:  val.RequestString,
+							VariableValues: val.VariableValues,
+						},
+					),
 				})
 			}
 		}

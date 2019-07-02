@@ -21,6 +21,8 @@ import (
 // which can be set by middleware on the incoming requests for the subscription handler.
 // SubscriptionIDs are set by the user, and are therefore *NOT* unique.
 // The combination of clientID and subscriptionID is unique
+// Subscriptions SHOULD be created with a TTL to clean them up after a while, and clients must be aware of this TTL,
+// so they can automatically recreate subscriptions they've created and have expired.
 type SubscriptionAdapter interface {
 	StartListening(cb orchestration.NewEventCallback)
 	NotifyNewSubscription(ctx context.Context, clientID string, subscriptionID string, subscriberData subscriptions.Data) error
