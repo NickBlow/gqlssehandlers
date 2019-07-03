@@ -15,8 +15,8 @@ import (
 )
 
 type subscriptionStorageAdapter interface {
-	NotifyNewSubscription(ctx context.Context, clientID string, subscriptionID string, subscriberData subscriptions.Data) error
-	NotifyUnsubscribe(ctx context.Context, clientID string, subscriptionID string) error
+	NotifyNewSubscription(ctx context.Context, subscriberData subscriptions.Data, queryData subscriptions.Query) error
+	NotifyUnsubscribe(ctx context.Context, subscriberData subscriptions.Data) error
 }
 
 // Handler handles the endpoint for processing new subscriptions and contains a reference to the Broker
@@ -39,9 +39,10 @@ func (s *Handler) handleGQLStart(ctx context.Context, req *protocol.GQLOverWebso
 	if validationResponse != nil {
 		return validationResponse
 	}
-	s.StorageAdapter.NotifyNewSubscription(ctx, clientID, req.ID, subscriptions.Data{
+	s.StorageAdapter.NotifyNewSubscription(ctx, subscriptions.Data{
 		SubscriptionID: req.ID,
 		ClientID:       clientID,
+	}, subscriptions.Query{
 		RequestString:  gqlPayload.Query,
 		VariableValues: gqlPayload.Variables,
 	})
@@ -63,7 +64,10 @@ func (s *Handler) handlePayload(r *http.Request, clientID string) *protocol.Resp
 		response := s.handleGQLStart(r.Context(), req, clientID)
 		return response
 	case "GQL_STOP":
-		s.StorageAdapter.NotifyUnsubscribe(r.Context(), clientID, req.ID)
+		s.StorageAdapter.NotifyUnsubscribe(r.Context(), subscriptions.Data{
+			SubscriptionID: req.ID,
+			ClientID:       clientID,
+		})
 		return protocol.OKResponse()
 	case "GQL_CONNECTION_TERMINATE":
 		s.Broker.ClosingClients <- clientID

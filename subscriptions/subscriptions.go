@@ -1,13 +1,17 @@
 package subscriptions
 
-// Data encompasses a particular subscription and the parameters for the GraphQL Query that should be performed.
+// Data encompasses a particular subscription and the client who requested it
+type Data struct {
+	SubscriptionID string
+	ClientID       string
+}
+
+// Query represents the parameters for the GraphQL Query that should be performed.
 // It will use the schema passed into the handler config.
 // RequestString is the raw GraphQL request string
 // VariableValues are the values of the variables in the query
 // This must be capable of being stored in and retreived from a database
-type Data struct {
-	SubscriptionID string
-	ClientID       string
+type Query struct {
 	RequestString  string
 	VariableValues map[string]interface{}
 }

@@ -25,8 +25,8 @@ import (
 // so they can automatically recreate subscriptions they've created and have expired.
 type SubscriptionAdapter interface {
 	StartListening(cb orchestration.NewEventCallback)
-	NotifyNewSubscription(ctx context.Context, clientID string, subscriptionID string, subscriberData subscriptions.Data) error
-	NotifyUnsubscribe(ctx context.Context, clientID string, subscriptionID string) error
+	NotifyNewSubscription(ctx context.Context, subscriberData subscriptions.Data, queryData subscriptions.Query) error
+	NotifyUnsubscribe(ctx context.Context, subscriberData subscriptions.Data) error
 }
 
 // Handlers is a struct containing the generated handlers.

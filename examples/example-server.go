@@ -20,7 +20,7 @@ func main() {
 
 	subscriptionServerConfig := &gqlssehandlers.HandlerConfig{
 		Adapter: eventStream,
-		Schema:  &schema.HelloWorldSchema,
+		Schema:  &schema.HelloReactiveSchema,
 	}
 
 	handlers := gqlssehandlers.GetHandlers(subscriptionServerConfig)

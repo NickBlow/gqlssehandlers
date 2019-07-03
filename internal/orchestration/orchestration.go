@@ -47,11 +47,13 @@ func InitializeBroker(schema *graphql.Schema) *Broker {
 // NewEventCallback is a function that should be called every time an event happens.
 // The event should be the results of the graphql query, and finished should be a boolean
 // detailing whether more events of this type should be expected
-type NewEventCallback func(subscriptions.WrappedEvent)
+// It will return an error if something went wrong when executing the callback
+type NewEventCallback func(subscriptions.WrappedEvent) error
 
 // PushDataToClient sends the event payload to the specified clients
-func (b *Broker) PushDataToClient(event subscriptions.WrappedEvent) {
+func (b *Broker) PushDataToClient(event subscriptions.WrappedEvent) error {
 	b.newEvents <- event
+	return nil
 }
 
 func (b *Broker) listen() {
