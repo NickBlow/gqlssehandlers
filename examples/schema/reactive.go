@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/graphql-go/graphql"
+	"github.com/graphql-go/graphql/gqlerrors"
 )
 
 // HelloReactiveSchema is a schema that resolves based on messages coming from a channel passed in via the context
@@ -21,11 +22,21 @@ type SampleEvent struct {
 	Name string
 }
 
-// ChannelClosedError is a concrete error type to signal the channel has been closed
-type ChannelClosedError struct{}
+type channelClosedError struct{}
 
-func (e *ChannelClosedError) Error() string {
+func (e *channelClosedError) Error() string {
 	return "Channel closed"
+}
+
+// HasChannelClosedError checks whether the error was due to the communication channel being closed
+func HasChannelClosedError(errors []gqlerrors.FormattedError) bool {
+	for _, val := range errors {
+		gqlError, ok := val.OriginalError().(*gqlerrors.Error) // gql library returns errors in a wrapped struct
+		if _, isClosedErr := gqlError.OriginalError.(*channelClosedError); ok && isClosedErr {
+			return true
+		}
+	}
+	return false
 }
 
 // AddChannelToContext adds the sampleEvent channel to the provided context and returns a new context with that channel set

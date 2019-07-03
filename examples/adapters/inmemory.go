@@ -11,7 +11,6 @@ import (
 	"github.com/NickBlow/gqlssehandlers/internal/orchestration"
 	"github.com/NickBlow/gqlssehandlers/subscriptions"
 	"github.com/graphql-go/graphql"
-	"github.com/graphql-go/graphql/gqlerrors"
 )
 
 type wrappedSubscriptionData struct {
@@ -28,16 +27,6 @@ type InMemoryAdapter struct {
 	mux           sync.Mutex
 }
 
-func hasChannelClosedError(errors []gqlerrors.FormattedError) bool {
-	for _, val := range errors {
-		gqlError, ok := val.OriginalError().(*gqlerrors.Error) // gql library returns errors in a wrapped struct
-		if _, isClosedErr := gqlError.OriginalError.(*schema.ChannelClosedError); ok && isClosedErr {
-			return true
-		}
-	}
-	return false
-}
-
 func (a *InMemoryAdapter) doSubscription(ctx context.Context, data subscriptions.Data, query subscriptions.Query) {
 	go func() {
 	Loop:
@@ -48,7 +37,7 @@ func (a *InMemoryAdapter) doSubscription(ctx context.Context, data subscriptions
 				RequestString:  query.RequestString,
 				VariableValues: query.VariableValues,
 			})
-			if hasChannelClosedError(res.Errors) {
+			if schema.HasChannelClosedError(res.Errors) {
 				break Loop
 			}
 			a.resultChannel <- subscriptions.WrappedEvent{
