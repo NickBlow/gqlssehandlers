@@ -69,7 +69,7 @@ func (a *InMemoryAdapter) StartListening(cb orchestration.NewEventCallback) {
 	go func() {
 		for {
 			select {
-			case <-time.After(time.Second * 1):
+			case <-time.After(time.Second * time.Duration(rand.Intn(10))):
 				for _, val := range subscribersMap {
 					val.communicationChannel <- schema.SampleEvent{Name: exampleNames[rand.Intn(len(exampleNames))]}
 				}
