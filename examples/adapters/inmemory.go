@@ -80,7 +80,7 @@ func (a *InMemoryAdapter) StartListening(cb orchestration.NewEventCallback) {
 	}()
 }
 
-// removes any existing subscriptions for that clientID/subscriptionID combo
+// cleanUpSubscription removes any existing subscriptions for that clientID/subscriptionID combo
 func (a *InMemoryAdapter) cleanUpSubscription(subscriberData subscriptions.Data) {
 	compoundKey := fmt.Sprintf("%v_%v", subscriberData.ClientID, subscriberData.SubscriptionID)
 	a.mux.Lock() // Just so we don't have concurrent callbacks trying to close the same channel
