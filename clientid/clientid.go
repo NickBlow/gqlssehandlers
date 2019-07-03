@@ -10,10 +10,8 @@ import (
 
 type contextKeyType string
 
-// ClientIDKey is the key for a value on the request context it will pick it up and use instead of the default cookie
-// The value should be a string representing the client id.
-// Malformed (non-string) values will automatically fall back to other methods
-const ClientIDKey contextKeyType = "gql_sse_client_id"
+// clientIDKey is the key for a value on the request context it will pick it up and use instead of the default cookie
+const clientIDKey contextKeyType = "gql_sse_client_id"
 
 // ClientIDQueryString is the query string value that can optionally be set to associate a request with a particular client id 'out of the box'
 // Any custom middleware setting the ClientIDKey on the context will take priority. The query string will take priority over the header.
@@ -36,10 +34,17 @@ const ClientIDHeader = "X-Gql-Sse-Client-Id"
 // this is not safe to use across multiple browser tabs if they all need to be connected.
 const DefaultCookieName = "gql_sse_client_id"
 
+// SetClientIDOnRequest sets the ClientID on the request context in a typesafe way
+func SetClientIDOnRequest(r *http.Request, clientID string) *http.Request {
+	ctx := r.Context()
+	newContext := context.WithValue(ctx, clientIDKey, clientID)
+	return r.WithContext(newContext)
+}
+
 // GetClientIDFromRequest returns the client id from the request, starting with the context,
 // and then checking the query string, header and finally cookie in that order
 func GetClientIDFromRequest(r *http.Request) string {
-	clientIDFromContext := r.Context().Value(ClientIDKey)
+	clientIDFromContext := r.Context().Value(clientIDKey)
 	if val, ok := clientIDFromContext.(string); clientIDFromContext != nil && ok {
 		return val
 	}
@@ -86,9 +91,7 @@ func Middleware(next http.Handler) http.HandlerFunc {
 				return
 			}
 		}
-		ctx := r.Context()
-		newContext := context.WithValue(ctx, ClientIDKey, clientID)
-		newRequest := r.WithContext(newContext)
+		newRequest := SetClientIDOnRequest(r, clientID)
 		next.ServeHTTP(w, newRequest)
 	}
 }
