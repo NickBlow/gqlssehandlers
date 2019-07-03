@@ -53,7 +53,7 @@ func (d *DDBStore) StoreSubscriptionInDDB(subscriberData subscriptions.Data, que
 			"TTL": {
 				N: aws.String(strconv.FormatInt(ttl, 10)),
 			},
-			"ClientId": {
+			"ClientID": {
 				S: aws.String(subscriberData.ClientID),
 			},
 			"SubscriptionID": {
@@ -87,7 +87,7 @@ func (d *DDBStore) RemoveSubscriptionFromDDB(subscriberData subscriptions.Data) 
 	ddbSvc.DeleteItem(&dynamodb.DeleteItemInput{
 		TableName: aws.String(d.TableName),
 		Key: map[string]*dynamodb.AttributeValue{
-			"ClientId": {
+			"ClientID": {
 				S: aws.String(subscriberData.ClientID),
 			},
 			"SubscriptionID": {
