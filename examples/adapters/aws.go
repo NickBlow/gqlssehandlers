@@ -28,3 +28,18 @@ func (a *AWSAdapter) NotifyNewSubscription(ctx context.Context, subscriberData s
 func (a *AWSAdapter) NotifyUnsubscribe(ctx context.Context, subscriberData subscriptions.Data) error {
 	return nil
 }
+
+// multicastSubscription sends details of the new subscription to SNS so that all servers have the up to date version
+func (a *AWSAdapter) multicastSubscription(ctx context.Context, subscriberData subscriptions.Data) error {
+	return nil
+}
+
+// NotifyClientConnect loads all the data for that client from DDB, and starts caring about new subscriptions for that client
+func (a *AWSAdapter) NotifyClientConnect(clientID string) error {
+	return nil
+}
+
+// NotifyClientDisconnect will unload the client's subscription data from memory
+func (a *AWSAdapter) NotifyClientDisconnect(clientID string) error {
+	return nil
+}

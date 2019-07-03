@@ -100,3 +100,13 @@ func (a *InMemoryAdapter) NotifyUnsubscribe(ctx context.Context, subscriberData 
 	a.cleanUpSubscription(subscriberData)
 	return nil
 }
+
+// NotifyClientConnect isn't useful information as everything is in memory, so just ignore it
+func (a *InMemoryAdapter) NotifyClientConnect(clientID string) error {
+	return nil
+}
+
+// NotifyClientDisconnect isn't useful information as everything is in memory, so just ignore it
+func (a *InMemoryAdapter) NotifyClientDisconnect(clientID string) error {
+	return nil
+}

@@ -61,7 +61,7 @@ func init() {
 				}
 				value, more := <-channel // Block until a value is sent down the channel, or it is closed
 				if !more {
-					return nil, &ChannelClosedError{}
+					return nil, &channelClosedError{}
 				}
 				return value.Name, nil
 			},

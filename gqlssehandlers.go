@@ -27,6 +27,8 @@ type SubscriptionAdapter interface {
 	StartListening(cb orchestration.NewEventCallback)
 	NotifyNewSubscription(ctx context.Context, subscriberData subscriptions.Data, queryData subscriptions.Query) error
 	NotifyUnsubscribe(ctx context.Context, subscriberData subscriptions.Data) error
+	NotifyClientConnect(clientID string) error
+	NotifyClientDisconnect(clientID string) error
 }
 
 // Handlers is a struct containing the generated handlers.
