@@ -80,23 +80,8 @@ func (a *InMemoryAdapter) StartListening(cb orchestration.NewEventCallback) {
 	}()
 }
 
-// NotifyNewSubscription adds a subscriber to the map
-func (a *InMemoryAdapter) NotifyNewSubscription(ctx context.Context, subscriberData subscriptions.Data, queryData subscriptions.Query) error {
-	compoundKey := fmt.Sprintf("%v_%v", subscriberData.ClientID, subscriberData.SubscriptionID)
-	communicaticationChannel := make(chan schema.SampleEvent)
-	subscribersMap[compoundKey] = wrappedSubscriptionData{
-		Data:                 subscriberData,
-		Query:                queryData,
-		communicationChannel: communicaticationChannel,
-	}
-	subscriptionContext := schema.AddChannelToContext(context.Background(), communicaticationChannel)
-	a.doSubscription(subscriptionContext, subscriberData, queryData)
-	return nil
-}
-
-// NotifyUnsubscribe removes a subscriber from the map
-func (a *InMemoryAdapter) NotifyUnsubscribe(ctx context.Context, subscriberData subscriptions.Data) error {
-	fmt.Println("Unsubscribing")
+// removes any existing subscriptions for that clientID/subscriptionID combo
+func (a *InMemoryAdapter) cleanUpSubscription(subscriberData subscriptions.Data) {
 	compoundKey := fmt.Sprintf("%v_%v", subscriberData.ClientID, subscriberData.SubscriptionID)
 	a.mux.Lock() // Just so we don't have concurrent callbacks trying to close the same channel
 	fmt.Println("Locked")
@@ -106,5 +91,26 @@ func (a *InMemoryAdapter) NotifyUnsubscribe(ctx context.Context, subscriberData 
 	delete(subscribersMap, compoundKey)
 	a.mux.Unlock()
 	fmt.Println("Unlocked")
+}
+
+// NotifyNewSubscription adds a subscriber to the map
+func (a *InMemoryAdapter) NotifyNewSubscription(ctx context.Context, subscriberData subscriptions.Data, queryData subscriptions.Query) error {
+	compoundKey := fmt.Sprintf("%v_%v", subscriberData.ClientID, subscriberData.SubscriptionID)
+	communicationChannel := make(chan schema.SampleEvent)
+	a.cleanUpSubscription(subscriberData) // To stop potential leaks of goroutines
+	subscribersMap[compoundKey] = wrappedSubscriptionData{
+		Data:                 subscriberData,
+		Query:                queryData,
+		communicationChannel: communicationChannel,
+	}
+	subscriptionContext := schema.AddChannelToContext(context.Background(), communicationChannel)
+	a.doSubscription(subscriptionContext, subscriberData, queryData)
+	return nil
+}
+
+// NotifyUnsubscribe removes a subscriber from the map
+func (a *InMemoryAdapter) NotifyUnsubscribe(ctx context.Context, subscriberData subscriptions.Data) error {
+	fmt.Println("Unsubscribing")
+	a.cleanUpSubscription(subscriberData)
 	return nil
 }
