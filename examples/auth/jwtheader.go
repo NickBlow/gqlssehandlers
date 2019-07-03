@@ -12,8 +12,17 @@ import (
 
 type userIDKeyType string
 
-// UserIDKey is the key for the value of the user id in the request context
-const UserIDKey userIDKeyType = "user_id"
+// userIDKey is the key for the value of the user id in the request context
+const userIDKey userIDKeyType = "user_id"
+
+// GetUserIDFromContext returns the user id added to the given context
+func GetUserIDFromContext(ctx context.Context) string {
+	userIDFromContext := ctx.Value(userIDKey)
+	if val, ok := userIDFromContext.(string); userIDFromContext != nil && ok {
+		return val
+	}
+	return ""
+}
 
 func decodeJWT(tokenString string, jwtSecret []byte) (map[string]interface{}, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -63,7 +72,7 @@ func SymmetricJWTMiddleware(next http.Handler, checkClaimsFunc CheckClaimsFunc, 
 			return
 		}
 		ctx := r.Context()
-		newContext := context.WithValue(ctx, UserIDKey, userID)
+		newContext := context.WithValue(ctx, userIDKey, userID)
 		newRequest := r.WithContext(newContext)
 		next.ServeHTTP(w, newRequest)
 	}
