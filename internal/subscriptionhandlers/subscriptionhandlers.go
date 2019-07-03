@@ -74,7 +74,7 @@ func (s *Handler) handlePayload(r *http.Request, clientID string) *protocol.Resp
 		return protocol.OKResponse()
 	case "GQL_INIT":
 		baseResponse := protocol.OKResponse()
-		baseResponse.ExtraHeaders[clientid.ClientIDHeader] = r.Context().Value(clientid.ClientIDKey).(string)
+		baseResponse.ExtraHeaders[clientid.ClientIDHeader] = clientid.GetClientIDFromRequest(r)
 		return baseResponse
 	default:
 		return protocol.BadRequestResponse()
