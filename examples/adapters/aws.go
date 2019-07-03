@@ -20,12 +20,11 @@ func (a *AWSAdapter) StartListening(cb orchestration.NewEventCallback) {
 }
 
 // NotifyNewSubscription stores a subscription in DynamoDB with a TTL
-func (a *AWSAdapter) NotifyNewSubscription(ctx context.Context,
-	clientID string, subscriptionID string, subscriberData subscriptions.Data) error {
+func (a *AWSAdapter) NotifyNewSubscription(ctx context.Context, subscriberData subscriptions.Data, queryData subscriptions.Query) error {
 	return nil
 }
 
 // NotifyUnsubscribe removes a subscription from DynamoDB
-func (a *AWSAdapter) NotifyUnsubscribe(ctx context.Context, clientID string, subscriptionID string) error {
+func (a *AWSAdapter) NotifyUnsubscribe(ctx context.Context, subscriberData subscriptions.Data) error {
 	return nil
 }
