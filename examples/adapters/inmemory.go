@@ -84,13 +84,11 @@ func (a *InMemoryAdapter) StartListening(cb orchestration.NewEventCallback) {
 func (a *InMemoryAdapter) cleanUpSubscription(subscriberData subscriptions.Data) {
 	compoundKey := fmt.Sprintf("%v_%v", subscriberData.ClientID, subscriberData.SubscriptionID)
 	a.mux.Lock() // Just so we don't have concurrent callbacks trying to close the same channel
-	fmt.Println("Locked")
 	if client, ok := subscribersMap[compoundKey]; ok {
 		close(client.communicationChannel) // IMPORTANT! This will terminate the goroutine that is executing the subscription
 	}
 	delete(subscribersMap, compoundKey)
 	a.mux.Unlock()
-	fmt.Println("Unlocked")
 }
 
 // NotifyNewSubscription adds a subscriber to the map
@@ -110,7 +108,6 @@ func (a *InMemoryAdapter) NotifyNewSubscription(ctx context.Context, subscriberD
 
 // NotifyUnsubscribe removes a subscriber from the map
 func (a *InMemoryAdapter) NotifyUnsubscribe(ctx context.Context, subscriberData subscriptions.Data) error {
-	fmt.Println("Unsubscribing")
 	a.cleanUpSubscription(subscriberData)
 	return nil
 }
