@@ -84,7 +84,17 @@ func (d *DDBStore) GetSubscriptionsFromDDB(ClientID string) []FullSubscriptionDa
 
 // RemoveSubscriptionFromDDB removes the subscription data in DDB.
 func (d *DDBStore) RemoveSubscriptionFromDDB(subscriberData subscriptions.Data) error {
-
+	ddbSvc.DeleteItem(&dynamodb.DeleteItemInput{
+		TableName: aws.String(d.TableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"ClientId": {
+				S: aws.String(subscriberData.ClientID),
+			},
+			"SubscriptionID": {
+				S: aws.String(subscriberData.SubscriptionID),
+			},
+		},
+	})
 	return nil
 }
 
