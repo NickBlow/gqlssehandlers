@@ -161,7 +161,7 @@ func ackMessage(message *sqs.Message, queueURL string) {
 	})
 	if err != nil {
 		fmt.Println(err)
-		fmt.Println("error deleting message, this isn't fatal as events are idempotent")
+		fmt.Println("error deleting message, this isn't fatal as events should be idempotent")
 	}
 }
 
