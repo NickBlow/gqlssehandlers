@@ -1,33 +1,22 @@
 package auth
 
 import (
-	"encoding/base64"
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 )
 
-var jwtSecret []byte
+type userIDKeyType string
 
-func init() {
-	// The secret is b64 encoded
-	jwtSecret64 := os.Getenv("JWT_SECRET")
-	if jwtSecret64 == "" {
-		panic("JWT_SECRET env var not set")
-	}
-	jwtSecretBytes, err := base64.StdEncoding.DecodeString(jwtSecret64)
-	if err != nil {
-		panic("Couldn't decode the JWT secret. Make sure JWT_SECRET env variable is set to something b64 encoded")
-	}
-	jwtSecret = jwtSecretBytes
-}
+// UserIDKey is the key for the value of the user id in the request context
+const UserIDKey userIDKeyType = "user_id"
 
-func decodeJWT(tokenString string) (map[string]interface{}, error) {
+func decodeJWT(tokenString string, jwtSecret []byte) (map[string]interface{}, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
@@ -40,20 +29,42 @@ func decodeJWT(tokenString string) (map[string]interface{}, error) {
 	return nil, err
 }
 
+func decodeHeader(authHeader string, jwtSecret []byte) (map[string]interface{}, error) {
+	if authHeader == "" {
+		return nil, errors.New("Empty Authorization header")
+	}
+	tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
+	claims, err := decodeJWT(tokenString, jwtSecret)
+	return claims, err
+}
+
+// CheckClaimsFunc should return a string representing the user id,
+// or an error if the user is not allowed to access the resource
+type CheckClaimsFunc func(map[string]interface{}) (string, error)
+
+// GetSecretFunc should return the JWT signing secret
+type GetSecretFunc func() []byte
+
 // SymmetricJWTMiddleware is an example authorization middleware which authorizes & authenticates
 // the user from a JWT in the Authorization header. The JWT is signed with a symmetric algorithm
-func SymmetricJWTMiddleware(next http.Handler) http.HandlerFunc {
+func SymmetricJWTMiddleware(next http.Handler, checkClaimsFunc CheckClaimsFunc, getSecretFunc GetSecretFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
+		claims, err := decodeHeader(authHeader, getSecretFunc())
+		if err != nil {
 			w.WriteHeader(401)
 			w.Write([]byte("{}"))
 			return
 		}
-		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
-		claims, err := decodeJWT(tokenString)
-		fmt.Println(claims)
-		fmt.Println(err)
-		next.ServeHTTP(w, r)
+		userID, err := checkClaimsFunc(claims)
+		if err != nil {
+			w.WriteHeader(403)
+			w.Write([]byte("{}"))
+			return
+		}
+		ctx := r.Context()
+		newContext := context.WithValue(ctx, UserIDKey, userID)
+		newRequest := r.WithContext(newContext)
+		next.ServeHTTP(w, newRequest)
 	}
 }

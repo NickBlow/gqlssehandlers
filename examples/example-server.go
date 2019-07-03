@@ -7,7 +7,6 @@ import (
 
 	"github.com/NickBlow/gqlssehandlers"
 	"github.com/NickBlow/gqlssehandlers/examples/adapters"
-	"github.com/NickBlow/gqlssehandlers/examples/auth"
 
 	gorrilaHandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -25,7 +24,7 @@ func main() {
 
 	handlers := gqlssehandlers.GetHandlers(subscriptionServerConfig)
 	router.Handle("/", handlers.PublishStreamHandler).Methods("GET")
-	router.Handle("/subscribe", auth.SymmetricJWTMiddleware(handlers.SubscribeHandler)).Methods("POST")
+	router.Handle("/subscribe", handlers.SubscribeHandler).Methods("POST")
 
 	originsOk := gorrilaHandlers.AllowedOrigins([]string{"https://localhost.wakelet.com"})
 	methodsOk := gorrilaHandlers.AllowedMethods([]string{"GET", "POST", "OPTIONS"})
