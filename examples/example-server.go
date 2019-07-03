@@ -7,6 +7,7 @@ import (
 
 	"github.com/NickBlow/gqlssehandlers"
 	"github.com/NickBlow/gqlssehandlers/examples/adapters"
+	"github.com/NickBlow/gqlssehandlers/examples/schema"
 
 	gorrilaHandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -19,7 +20,7 @@ func main() {
 
 	subscriptionServerConfig := &gqlssehandlers.HandlerConfig{
 		Adapter: eventStream,
-		Schema:  &adapters.Schema,
+		Schema:  &schema.HelloWorldSchema,
 	}
 
 	handlers := gqlssehandlers.GetHandlers(subscriptionServerConfig)

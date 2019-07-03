@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/NickBlow/gqlssehandlers/examples/schema"
 	"github.com/NickBlow/gqlssehandlers/internal/orchestration"
 	"github.com/NickBlow/gqlssehandlers/subscriptions"
 	"github.com/graphql-go/graphql"
@@ -14,28 +15,6 @@ import (
 type subscriptionData = subscriptions.Data
 
 var subscribersMap = make(map[string]subscriptionData)
-
-// Schema is the example schema
-var Schema graphql.Schema
-
-func init() {
-	var fields = graphql.Fields{
-		"hello": &graphql.Field{
-			Type: graphql.String,
-			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				return "world", nil
-			},
-		},
-	}
-	var rootQuery = graphql.ObjectConfig{Name: "RootQuery", Fields: fields}
-	var schemaConfig = graphql.SchemaConfig{Query: graphql.NewObject(rootQuery)}
-	var schema, err = graphql.NewSchema(schemaConfig)
-	if err != nil {
-		fmt.Println(err)
-		panic("Couldn't create schema")
-	}
-	Schema = schema
-}
 
 // InMemoryAdapter stores subscribers in memory, and triggers events at random intervals
 type InMemoryAdapter struct{}
@@ -51,7 +30,7 @@ func (a *InMemoryAdapter) StartListening(cb orchestration.NewEventCallback) {
 					ClientID:       val.ClientID,
 					QueryResult: graphql.Do(
 						graphql.Params{
-							Schema:         Schema,
+							Schema:         schema.HelloWorldSchema,
 							RequestString:  val.RequestString,
 							VariableValues: val.VariableValues,
 						},
