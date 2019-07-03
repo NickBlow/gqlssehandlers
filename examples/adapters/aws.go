@@ -14,7 +14,7 @@ import (
 // Some of the services may not be covered by the AWS free tier, so please check before running this.
 type AWSAdapter struct{}
 
-// StartListening sets up some pubsub infrastructure and calls the callback with information about new messages
+// StartListening sets up some pubsub infrastructure with SQS and SNS and calls the callback with information about new messages
 func (a *AWSAdapter) StartListening(cb orchestration.NewEventCallback) {
 
 }
