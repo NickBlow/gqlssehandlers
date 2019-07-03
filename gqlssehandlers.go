@@ -7,6 +7,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/NickBlow/gqlssehandlers/callbacks"
 	"github.com/NickBlow/gqlssehandlers/clientid"
 	"github.com/NickBlow/gqlssehandlers/internal/orchestration"
 	"github.com/NickBlow/gqlssehandlers/internal/streaming"
@@ -24,7 +25,7 @@ import (
 // ClientID and subscriptions SHOULD be created with a TTL to clean them up after a while, and clients SHOULD be aware of this TTL,
 // so they can automatically recreate subscriptions they've created and have expired.
 type SubscriptionAdapter interface {
-	StartListening(cb orchestration.NewEventCallback)
+	StartListening(cb callbacks.NewEventCallback)
 	NotifyNewSubscription(ctx context.Context, subscriberData subscriptions.Data, queryData subscriptions.Query) error
 	NotifyUnsubscribe(ctx context.Context, subscriberData subscriptions.Data) error
 	NotifyClientConnect(clientID string) error
@@ -51,7 +52,11 @@ type HandlerConfig struct {
 // You can write middleware to set the ClientIDKey in the context to overwrite this default behaviour
 // See the clientid package for more information.
 func GetHandlers(config *HandlerConfig) *Handlers {
-	subscriptionBroker := orchestration.InitializeBroker(config.Schema)
+	subscriptionBroker := orchestration.InitializeBroker(
+		config.Schema,
+		config.Adapter.NotifyClientConnect,
+		config.Adapter.NotifyClientDisconnect,
+	)
 	config.Adapter.StartListening(subscriptionBroker.PushDataToClient)
 
 	subscribeHandler := &subscriptionhandlers.Handler{

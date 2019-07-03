@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/NickBlow/gqlssehandlers/callbacks"
 	"github.com/NickBlow/gqlssehandlers/examples/schema"
-	"github.com/NickBlow/gqlssehandlers/internal/orchestration"
 	"github.com/NickBlow/gqlssehandlers/subscriptions"
 	"github.com/graphql-go/graphql"
 )
@@ -52,7 +52,7 @@ func (a *InMemoryAdapter) doSubscription(ctx context.Context, data subscriptions
 
 // StartListening sends data to each subscriber's source channel at a random interval.
 // It must be called before NotifyNewSubscription or NotifyUnsubscribe as it initialises the result channel
-func (a *InMemoryAdapter) StartListening(cb orchestration.NewEventCallback) {
+func (a *InMemoryAdapter) StartListening(cb callbacks.NewEventCallback) {
 	exampleNames := []string{"graphql", "gophers", "world"}
 	a.resultChannel = make(chan subscriptions.WrappedEvent)
 	go func() {

@@ -3,7 +3,7 @@ package adapters
 import (
 	"context"
 
-	"github.com/NickBlow/gqlssehandlers/internal/orchestration"
+	"github.com/NickBlow/gqlssehandlers/callbacks"
 	"github.com/NickBlow/gqlssehandlers/subscriptions"
 )
 
@@ -15,7 +15,7 @@ import (
 type AWSAdapter struct{}
 
 // StartListening sets up some pubsub infrastructure with SQS and SNS and calls the callback with information about new messages
-func (a *AWSAdapter) StartListening(cb orchestration.NewEventCallback) {
+func (a *AWSAdapter) StartListening(cb callbacks.NewEventCallback) {
 
 }
 

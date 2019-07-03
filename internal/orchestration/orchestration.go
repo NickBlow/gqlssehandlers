@@ -30,7 +30,7 @@ type Broker struct {
 }
 
 // InitializeBroker creates a broker and starts listening to events
-func InitializeBroker(schema *graphql.Schema) *Broker {
+func InitializeBroker(schema *graphql.Schema, newClientCb func(string) error, clientDisconnectCb func(string) error) *Broker {
 	b := &Broker{
 		Schema:         schema,
 		NewClients:     make(chan ClientInfo),
@@ -40,15 +40,9 @@ func InitializeBroker(schema *graphql.Schema) *Broker {
 		bufferedEvents: make([]interface{}, 0),
 		clients:        map[string]ClientInfo{},
 	}
-	go b.listen()
+	go b.listen(newClientCb, clientDisconnectCb)
 	return b
 }
-
-// NewEventCallback is a function that should be called every time an event happens.
-// The event should be the results of the graphql query, and finished should be a boolean
-// detailing whether more events of this type should be expected
-// It will return an error if something went wrong when executing the callback
-type NewEventCallback func(subscriptions.WrappedEvent) error
 
 // PushDataToClient sends the event payload to the specified clients
 func (b *Broker) PushDataToClient(event subscriptions.WrappedEvent) error {
@@ -56,15 +50,17 @@ func (b *Broker) PushDataToClient(event subscriptions.WrappedEvent) error {
 	return nil
 }
 
-func (b *Broker) listen() {
+func (b *Broker) listen(newClientCb func(string) error, clientDisconnectCb func(string) error) {
 	for {
 		select {
 		case client := <-b.NewClients:
 			b.clients[client.ClientID] = client
+			newClientCb(client.ClientID)
 		case client := <-b.ClosingClients:
 			b.clients[client].CloseChannel <- true
 		case client := <-b.ClosedClients:
 			delete(b.clients, client)
+			clientDisconnectCb(client)
 		case event := <-b.newEvents:
 			client := b.clients[event.ClientID]
 			if client.CommunicationChannel == nil {
