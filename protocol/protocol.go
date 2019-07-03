@@ -137,7 +137,7 @@ func validationErrorResponse(errors []gqlerrors.FormattedError) *Response {
 	}
 }
 
-// ValidatePayload validates a grapqhl payload without executing it
+// ValidatePayload validates a graphql payload without executing it
 func ValidatePayload(gqlPayload GQLStartPayload, schema *graphql.Schema) *Response {
 	// validate without executing - ignoring extensions for now
 	AST, err := parser.Parse(parser.ParseParams{Source: gqlPayload.Query})

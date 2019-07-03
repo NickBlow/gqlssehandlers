@@ -9,6 +9,7 @@ import (
 
 // HelloReactiveSchema is a schema that resolves based on messages coming from a channel passed in via the context
 // It is intended to be run in a loop in a goroutine - the resolve function will block until something comes into the channel
+// Query is simply `{hello}`
 var HelloReactiveSchema graphql.Schema
 
 type channelKeyType string
