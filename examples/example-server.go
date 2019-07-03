@@ -27,7 +27,7 @@ func main() {
 	router.Handle("/", handlers.PublishStreamHandler).Methods("GET")
 	router.Handle("/subscribe", handlers.SubscribeHandler).Methods("POST")
 
-	originsOk := gorrilaHandlers.AllowedOrigins([]string{"https://localhost.wakelet.com"})
+	originsOk := gorrilaHandlers.AllowedOrigins([]string{"https://example.com"})
 	methodsOk := gorrilaHandlers.AllowedMethods([]string{"GET", "POST", "OPTIONS"})
 
 	// Server has long write timeout because we're supporting a streaming response.
