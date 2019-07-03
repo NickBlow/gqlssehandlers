@@ -119,12 +119,7 @@ func createQueue(snsARN string) (string, string) {
 }
 
 // StartListening sets up the infrastructure necessary to listen to events on an SQS queue in AWS
-func (a *AWSEventStream) StartListening(eventChannel chan string) {
-
-	snsARN := os.Getenv("SNS_TOPIC_ARN")
-	if snsARN == "" {
-		panic("Require SNS_TOPIC_ARN env var to be set")
-	}
+func (a *AWSEventStream) StartListening(eventChannel chan string, snsARN string) {
 	queueARN, queueURL := createQueue(snsARN)
 	fmt.Printf("Created SQS queue %s\n", queueARN)
 
@@ -172,8 +167,9 @@ func ackMessage(message *sqs.Message, queueURL string) {
 
 func processMessages(eventChannel chan string, queueURL string, messages []*sqs.Message) {
 	for _, msg := range messages {
-		fmt.Println(msg)
-		eventChannel <- *msg.Body
-		ackMessage(msg, queueURL)
+		if msg.Body != nil {
+			eventChannel <- *msg.Body
+			ackMessage(msg, queueURL)
+		}
 	}
 }
