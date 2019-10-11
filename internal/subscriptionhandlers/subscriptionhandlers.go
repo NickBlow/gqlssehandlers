@@ -39,13 +39,17 @@ func (s *Handler) handleGQLStart(ctx context.Context, req *protocol.GQLOverWebso
 	if validationResponse != nil {
 		return validationResponse
 	}
-	s.StorageAdapter.NotifyNewSubscription(ctx, subscriptions.Data{
+	err = s.StorageAdapter.NotifyNewSubscription(ctx, subscriptions.Data{
 		SubscriptionID: req.ID,
 		ClientID:       clientID,
 	}, subscriptions.Query{
 		RequestString:  gqlPayload.Query,
 		VariableValues: gqlPayload.Variables,
 	})
+	if err != nil {
+		fmt.Println(err)
+		return protocol.BadRequestResponse()
+	}
 	return protocol.OKResponse()
 }
 
